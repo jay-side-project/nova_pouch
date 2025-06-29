@@ -22,12 +22,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 안내 메시지 표시
-    function showAlert(msg) {
-        alert(msg);
+    function showDialog(msg, onClose) {
+        const modal = document.getElementById('dialog-modal');
+        const messageDiv = modal.querySelector('.dialog-message');
+        const btn = modal.querySelector('.dialog-btn');
+        messageDiv.textContent = msg;
+        modal.style.display = 'flex';
+        function closeHandler() {
+            modal.style.display = 'none';
+            btn.removeEventListener('click', closeHandler);
+            if (onClose) onClose();
+        }
+        btn.addEventListener('click', closeHandler);
+    }
+
+    function isAllTokensSelected() {
+        const item = document.getElementById('label-items').textContent;
+        const attr = document.getElementById('label-attributes').textContent;
+        const nova = document.getElementById('label-nova').textContent;
+        if (turnCount < 6) {
+            return item !== '물건 토큰' && attr !== '속성 토큰';
+        } else {
+            return item !== '물건 토큰' && attr !== '속성 토큰' && nova !== '노바 토큰';
+        }
     }
 
     // 턴 종료 버튼 클릭 시 턴 증가
     document.querySelector('.end-turn-btn').addEventListener('click', () => {
+        if (!isAllTokensSelected()) {
+            showDialog('아직 토큰을 뽑지 않았습니다.', null);
+            return;
+        }
         increaseTurn();
     });
 
@@ -37,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const type = img.dataset.pouch;
             // 노바 파우치(초록) 제한
             if (type === 'nova' && turnCount < 6) {
-                showAlert('노바 파우치는 아직 사용할 수 없습니다.');
+                showDialog('노바 파우치는 아직 사용할 수 없습니다.', null);
                 return;
             }
             if (!tokens) return;
@@ -146,6 +171,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 생명력(하트) 클릭 이벤트 (플레이어별)
     playersSection.addEventListener('click', (e) => {
         if (e.target.classList.contains('heart')) {
+            if (!isAllTokensSelected()) {
+                showDialog('아직 토큰을 뽑지 않았습니다.', null);
+                return;
+            }
             const heart = e.target;
             const heartsDiv = heart.parentElement;
             const playerDiv = heartsDiv.closest('.player');
@@ -159,6 +188,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 nameDiv.classList.add('disabled');
                 nameDiv.classList.remove('editable');
                 nameDiv.style.color = '#aaa';
+                // 게임 종료 체크
+                const allPlayers = Array.from(playersSection.querySelectorAll('.player'));
+                const alivePlayers = allPlayers.filter(p => p.querySelector('.hearts').children.length > 0);
+                if (allPlayers.length === 1) {
+                    // 1인 플레이어
+                    gameOverDialog();
+                } else if (alivePlayers.length === 1) {
+                    // 여러 명 중 1명만 남음
+                    const winnerName = alivePlayers[0].querySelector('.player-name').textContent;
+                    gameOverDialog(winnerName);
+                }
                 return;
             }
             // 하트 2개 이상일 때는 기존처럼 삭제 및 턴 증가
@@ -171,5 +211,44 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('label-items').textContent = '물건 토큰';
         document.getElementById('label-attributes').textContent = '속성 토큰';
         document.getElementById('label-nova').textContent = '노바 토큰';
+    }
+
+    function gameOverDialog(winnerName) {
+        let msg = '';
+        if (winnerName) {
+            msg = `게임이 종료되었습니다. 승자는 ${winnerName}입니다.`;
+        } else {
+            msg = '게임이 종료되었습니다.';
+        }
+        showDialog(msg, restartGame);
+    }
+
+    function restartGame() {
+        // 턴 초기화
+        resetTurn();
+        // 토큰 라벨 초기화
+        resetTokenLabels();
+        // 플레이어 1만 남기고 모두 삭제
+        const players = playersSection.querySelectorAll('.player');
+        players.forEach((player, idx) => {
+            if (idx > 0) player.remove();
+        });
+        playerCount = 1;
+        addPlayerBtn.style.display = '';
+        // 플레이어1 이름/하트/상태 초기화
+        const nameDiv = document.getElementById('player-name-1');
+        nameDiv.textContent = '플레이어 1';
+        nameDiv.classList.remove('disabled');
+        nameDiv.classList.add('editable');
+        nameDiv.style.color = '';
+        const heartsDiv = document.querySelector('#player-1 .hearts');
+        heartsDiv.innerHTML = '';
+        for (let i = 0; i < 3; i++) {
+            const heart = document.createElement('img');
+            heart.src = 'heart.png';
+            heart.alt = '생명력';
+            heart.className = 'heart';
+            heartsDiv.appendChild(heart);
+        }
     }
 }); 
