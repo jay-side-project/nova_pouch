@@ -29,6 +29,12 @@ body {
     font-weight: bold;
     margin: 0;
     letter-spacing: 2px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.title:hover {
+    opacity: 0.8;
 }
 
 .restart-btn,
@@ -104,6 +110,8 @@ body {
     margin-bottom: 16px;
     display: block;
     max-width: 100%;
+    pointer-events: auto;
+    cursor: pointer;
 }
 
 .pouch-label {
@@ -172,6 +180,7 @@ body {
     object-fit: contain;
     cursor: pointer;
     transition: opacity 0.2s;
+    pointer-events: auto;
 }
 
 .add-player {
@@ -334,6 +343,7 @@ body {
     color: #222;
     margin-bottom: 24px;
     word-break: keep-all;
+    white-space: pre-line;
 }
 
 .dialog-btn {
@@ -354,4 +364,18 @@ body {
 
 .dialog-btn:hover {
     background: #d1d1d1;
+}
+
+/* 이미지 다운로드 방지 */
+img {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+    pointer-events: none;
 }

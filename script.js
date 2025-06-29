@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function gameOverDialog(winnerName) {
         let msg = '';
         if (winnerName) {
-            msg = `게임이 종료되었습니다. 승자는 ${winnerName}입니다.`;
+            msg = `게임이 종료되었습니다.\n승자는 ${winnerName}입니다.`;
         } else {
             msg = '게임이 종료되었습니다.';
         }
@@ -251,4 +251,35 @@ document.addEventListener('DOMContentLoaded', () => {
             heartsDiv.appendChild(heart);
         }
     }
+
+    // 제목 클릭 시 사이트 설명 다이얼로그
+    document.querySelector('.title').addEventListener('click', () => {
+        const description = `김초엽 작가의 단편 소설 『비구름을 따라서』에 나오는 
+        보드게임 <노바 파우치>를 웹 사이트로 구현해 보았습니다.`;
+        showDialog(description, null);
+    });
+
+    // 이미지 다운로드 방지
+    document.addEventListener('contextmenu', (e) => {
+        if (e.target.tagName === 'IMG') {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        // Ctrl+S, Ctrl+U, F12 등 방지
+        if ((e.ctrlKey && (e.key === 's' || e.key === 'u')) || e.key === 'F12') {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // 드래그 방지
+    document.addEventListener('dragstart', (e) => {
+        if (e.target.tagName === 'IMG') {
+            e.preventDefault();
+            return false;
+        }
+    });
 }); 
