@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOVA POUCH</title>
+    <link rel="stylesheet" href="style.css">
+    <script defer src="script.js"></script>
+    <link rel="icon" href="red.png">
+    <link rel="preconnect" href="https://fastly.jsdelivr.net">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fastly.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css" rel="stylesheet">
+</head>
+
+<body>
+    <header class="header">
+        <h1 class="title">NOVA POUCH</h1>
+        <button class="restart-btn">재시작</button>
+    </header>
+    <main class="main">
+        <div class="turn-panel">
+            <button class="end-turn-btn">턴 종료</button>
+            <div class="turn-info">현재 턴 수: <span id="turn-count">1</span></div>
+        </div>
+        <section class="pouches">
+            <div class="pouch">
+                <img src="red.png" alt="물건 토큰" class="pouch-img" data-pouch="items">
+                <div class="pouch-label" id="label-items">물건 토큰</div>
+            </div>
+            <div class="pouch">
+                <img src="blue.png" alt="속성 토큰" class="pouch-img" data-pouch="attributes">
+                <div class="pouch-label" id="label-attributes">속성 토큰</div>
+            </div>
+            <div class="pouch">
+                <img src="green.png" alt="노바 토큰" class="pouch-img" data-pouch="nova">
+                <div class="pouch-label" id="label-nova">노바 토큰</div>
+            </div>
+        </section>
+        <section class="players">
+            <div class="player" id="player-1">
+                <div class="player-name editable" id="player-name-1">플레이어 1</div>
+                <div class="hearts">
+                    <img src="heart.png" alt="생명력" class="heart">
+                    <img src="heart.png" alt="생명력" class="heart">
+                    <img src="heart.png" alt="생명력" class="heart">
+                </div>
+            </div>
+            <button class="add-player">+</button>
+        </section>
+    </main>
+</body>
+
+</html>
