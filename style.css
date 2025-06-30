@@ -135,6 +135,12 @@ body {
     justify-content: center;
 }
 
+.pouch-label.last-token {
+    color: #e74c3c !important;
+    font-weight: bold;
+    text-shadow: 0 1px 6px rgba(231, 76, 60, 0.08);
+}
+
 .players {
     display: flex;
     gap: 24px;

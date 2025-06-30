@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function increaseTurn() {
         turnCount++;
         turnCountSpan.textContent = turnCount;
-        resetTokenLabels();
     }
     function resetTurn() {
         turnCount = 1;
@@ -49,11 +48,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 턴 종료 버튼 클릭 시 턴 증가
     document.querySelector('.end-turn-btn').addEventListener('click', () => {
+        if (turnBlocked) return;
         if (!isAllTokensSelected()) {
             showDialog('아직 토큰을 뽑지 않았습니다.', null);
             return;
         }
         increaseTurn();
+        afterTurnEnd();
     });
 
     // 파우치 클릭 시 토큰 표시 (pouch-label에 표시)
@@ -66,11 +67,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             if (!tokens) return;
-            const tokenList = tokens[type];
-            if (!tokenList || tokenList.length === 0) return;
-            const randomIdx = Math.floor(Math.random() * tokenList.length);
-            const token = tokenList[randomIdx];
-            document.getElementById('label-' + type).textContent = token;
+            // 사용되지 않은 토큰만 뽑기
+            const availableTokens = tokens[type].filter(t => !usedTokens[type].includes(t));
+            console.log(`[${type}] 사용 가능한 토큰:`, availableTokens);
+            console.log(`[${type}] 이미 사용된 토큰:`, usedTokens[type]);
+            if (availableTokens.length === 0) {
+                showDialog('남은 토큰이 없습니다.', null);
+                return;
+            }
+            const randomIdx = Math.floor(Math.random() * availableTokens.length);
+            const token = availableTokens[randomIdx];
+            const label = document.getElementById('label-' + type);
+            label.textContent = token;
+            lastSelectedTokens[type] = token;
+            // 마지막 토큰이면 색상 강조
+            if (availableTokens.length === 1) {
+                label.classList.add('last-token');
+            } else {
+                label.classList.remove('last-token');
+            }
         });
     });
 
@@ -140,36 +155,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 재시작 버튼 클릭 이벤트
     document.querySelector('.restart-btn').addEventListener('click', () => {
-        // 턴 초기화
-        resetTurn();
-        // 토큰 라벨 초기화
-        resetTokenLabels();
-        // 플레이어 1만 남기고 모두 삭제
-        const players = playersSection.querySelectorAll('.player');
-        players.forEach((player, idx) => {
-            if (idx > 0) player.remove();
-        });
-        playerCount = 1;
-        addPlayerBtn.style.display = '';
-        // 플레이어1 이름/하트/상태 초기화
-        const nameDiv = document.getElementById('player-name-1');
-        nameDiv.textContent = '플레이어 1';
-        nameDiv.classList.remove('disabled');
-        nameDiv.classList.add('editable');
-        nameDiv.style.color = '';
-        const heartsDiv = document.querySelector('#player-1 .hearts');
-        heartsDiv.innerHTML = '';
-        for (let i = 0; i < 3; i++) {
-            const heart = document.createElement('img');
-            heart.src = 'heart.png';
-            heart.alt = '생명력';
-            heart.className = 'heart';
-            heartsDiv.appendChild(heart);
-        }
+        turnBlocked = false;
+        restartGame();
     });
 
     // 생명력(하트) 클릭 이벤트 (플레이어별)
     playersSection.addEventListener('click', (e) => {
+        if (turnBlocked) return;
         if (e.target.classList.contains('heart')) {
             if (!isAllTokensSelected()) {
                 showDialog('아직 토큰을 뽑지 않았습니다.', null);
@@ -199,11 +191,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const winnerName = alivePlayers[0].querySelector('.player-name').textContent;
                     gameOverDialog(winnerName);
                 }
+                increaseTurn();
+                afterTurnEnd();
                 return;
             }
             // 하트 2개 이상일 때는 기존처럼 삭제 및 턴 증가
             heart.remove();
             increaseTurn();
+            afterTurnEnd();
         }
     });
 
@@ -211,6 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('label-items').textContent = '물건 토큰';
         document.getElementById('label-attributes').textContent = '속성 토큰';
         document.getElementById('label-nova').textContent = '노바 토큰';
+        lastSelectedTokens = { items: null, attributes: null, nova: null };
+        // 강조 색상 모두 제거
+        tokenTypes.forEach(type => {
+            document.getElementById('label-' + type).classList.remove('last-token');
+        });
     }
 
     function gameOverDialog(winnerName) {
@@ -228,6 +228,8 @@ document.addEventListener('DOMContentLoaded', () => {
         resetTurn();
         // 토큰 라벨 초기화
         resetTokenLabels();
+        // 사용된 토큰 초기화
+        usedTokens = { items: [], attributes: [], nova: [] };
         // 플레이어 1만 남기고 모두 삭제
         const players = playersSection.querySelectorAll('.player');
         players.forEach((player, idx) => {
@@ -282,4 +284,39 @@ document.addEventListener('DOMContentLoaded', () => {
             return false;
         }
     });
+
+    let usedTokens = {
+        items: [],
+        attributes: [],
+        nova: []
+    };
+    let lastSelectedTokens = {
+        items: null,
+        attributes: null,
+        nova: null
+    };
+    let tokenTypes = ['items', 'attributes', 'nova'];
+
+    function afterTurnEnd() {
+        // 마지막에 뽑은 토큰만 사용 처리
+        tokenTypes.forEach(type => {
+            if (lastSelectedTokens[type] && !usedTokens[type].includes(lastSelectedTokens[type])) {
+                usedTokens[type].push(lastSelectedTokens[type]);
+            }
+        });
+        // 턴 라벨 초기화
+        resetTokenLabels();
+        // 파우치가 하나라도 비어있으면 게임 종료
+        if (isAnyPouchEmpty()) {
+            showDialog('남은 토큰이 없어 게임을 종료합니다. 게임을 재시작하세요.', null);
+            // 턴 종료/하트 클릭 등 추가 동작 방지(아무것도 하지 않음)
+            turnBlocked = true;
+        }
+    }
+    let turnBlocked = false;
+
+    function isAnyPouchEmpty() {
+        if (!tokens) return false;
+        return tokenTypes.some(type => tokens[type].filter(t => !usedTokens[type].includes(t)).length === 0);
+    }
 }); 
